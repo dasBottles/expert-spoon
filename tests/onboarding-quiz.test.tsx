@@ -17,12 +17,12 @@ describe("OnboardingQuiz", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          dietary_restrictions: [],
+          diet_type: [],
           allergies: [],
-          cuisines: [],
-          prep_time_max: 30,
-          difficulty_max: "medium",
-          exclude_ingredients: [],
+          cooking_skill: "medium",
+          household_size: 2,
+          time_preference: 30,
+          cuisine_preferences: [],
         }),
       }),
     );
@@ -32,12 +32,12 @@ describe("OnboardingQuiz", () => {
     render(<OnboardingQuiz />);
 
     expect(screen.getByText("Let’s set up your preferences")).toBeInTheDocument();
-    expect(screen.getByLabelText("Dietary restrictions")).toBeInTheDocument();
+    expect(screen.getByLabelText("Diet type")).toBeInTheDocument();
     expect(screen.getByLabelText("Allergies")).toBeInTheDocument();
-    expect(screen.getByLabelText("Preferred cuisines")).toBeInTheDocument();
-    expect(screen.getByLabelText("Max prep time")).toBeInTheDocument();
-    expect(screen.getByLabelText("Cooking difficulty")).toBeInTheDocument();
-    expect(screen.getByLabelText("Ingredients to exclude")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cooking skill")).toBeInTheDocument();
+    expect(screen.getByLabelText("Household size")).toBeInTheDocument();
+    expect(screen.getByLabelText("Time preference")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cuisine preferences")).toBeInTheDocument();
     expect(
       await screen.findByRole("button", { name: "Save preferences" }),
     ).toBeInTheDocument();

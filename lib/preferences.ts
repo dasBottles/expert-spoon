@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const dietaryRestrictionOptions = [
+export const dietTypeOptions = [
   "vegetarian",
   "vegan",
   "keto",
@@ -18,47 +18,64 @@ export const cuisineOptions = [
   "Indian",
 ] as const;
 
-export const difficultyOptions = ["easy", "medium", "hard"] as const;
-export const prepTimeOptions = [15, 30, 45, 60] as const;
+export const cookingSkillOptions = ["easy", "medium", "hard"] as const;
+export const timePreferenceOptions = [15, 30, 45, 60] as const;
+export const householdSizeOptions = [1, 2, 4, 6] as const;
 
-const dietaryRestrictionEnum = z.enum(dietaryRestrictionOptions);
+const dietTypeEnum = z.enum(dietTypeOptions);
 const cuisineEnum = z.enum(cuisineOptions);
-const difficultyEnum = z.enum(difficultyOptions);
+const cookingSkillEnum = z.enum(cookingSkillOptions);
 
-type DietaryRestriction = z.infer<typeof dietaryRestrictionEnum>;
+type DietType = z.infer<typeof dietTypeEnum>;
 type Cuisine = z.infer<typeof cuisineEnum>;
-type Difficulty = z.infer<typeof difficultyEnum>;
+type CookingSkill = z.infer<typeof cookingSkillEnum>;
 
 export const defaultPreferences = {
-  dietaryRestrictions: [] as DietaryRestriction[],
+  dietType: [] as DietType[],
   allergies: "",
-  cuisines: [] as Cuisine[],
-  prepTimeMax: 30,
-  difficultyMax: "medium" as Difficulty,
-  excludeIngredients: "",
+  cookingSkill: "medium" as CookingSkill,
+  householdSize: 2,
+  timePreference: 30,
+  cuisinePreferences: [] as Cuisine[],
 };
 
 export const preferencesFormSchema = z.object({
-  dietaryRestrictions: z.array(dietaryRestrictionEnum).default([]),
-  allergies: z.string().trim().default(""),
-  cuisines: z.array(cuisineEnum).default([]),
-  prepTimeMax: z.coerce.number().refine((value) => prepTimeOptions.includes(value as 15 | 30 | 45 | 60), {
-    message: "Choose a supported prep time.",
-  }),
-  difficultyMax: difficultyEnum,
-  excludeIngredients: z.string().trim().default(""),
+  dietType: z.array(dietTypeEnum),
+  allergies: z.string().trim(),
+  cookingSkill: cookingSkillEnum,
+  householdSize: z.coerce
+    .number()
+    .int()
+    .refine((value) => householdSizeOptions.includes(value as 1 | 2 | 4 | 6), {
+      message: "Choose a supported household size.",
+    }),
+  timePreference: z.coerce
+    .number()
+    .refine((value) => timePreferenceOptions.includes(value as 15 | 30 | 45 | 60), {
+      message: "Choose a supported prep time.",
+    }),
+  cuisinePreferences: z.array(cuisineEnum),
 });
 
-export const preferencesApiSchema = z.object({
-  dietary_restrictions: z.array(dietaryRestrictionEnum).default([]),
-  allergies: z.array(z.string()).default([]),
-  cuisines: z.array(cuisineEnum).default([]),
-  prep_time_max: z.coerce.number().refine((value) => prepTimeOptions.includes(value as 15 | 30 | 45 | 60), {
-    message: "Choose a supported prep time.",
-  }),
-  difficulty_max: difficultyEnum,
-  exclude_ingredients: z.array(z.string()).default([]),
-});
+export const preferencesApiSchema = z
+  .object({
+    diet_type: z.array(dietTypeEnum),
+    allergies: z.array(z.string().trim().min(1)),
+    cooking_skill: cookingSkillEnum,
+    household_size: z.coerce
+      .number()
+      .int()
+      .refine((value) => householdSizeOptions.includes(value as 1 | 2 | 4 | 6), {
+        message: "Choose a supported household size.",
+      }),
+    time_preference: z.coerce
+      .number()
+      .refine((value) => timePreferenceOptions.includes(value as 15 | 30 | 45 | 60), {
+        message: "Choose a supported prep time.",
+      }),
+    cuisine_preferences: z.array(cuisineEnum),
+  })
+  .strict();
 
 export type PreferencesFormValues = z.infer<typeof preferencesFormSchema>;
 export type PreferencesApiPayload = z.infer<typeof preferencesApiSchema>;
@@ -72,34 +89,36 @@ export function joinList(values: string[]): string {
 }
 
 export function toApiPayload(values: PreferencesFormValues): PreferencesApiPayload {
+  const parsedValues = preferencesFormSchema.parse(values);
+
   return {
-    dietary_restrictions: values.dietaryRestrictions,
-    allergies: splitList(values.allergies),
-    cuisines: values.cuisines,
-    prep_time_max: values.prepTimeMax,
-    difficulty_max: values.difficultyMax,
-    exclude_ingredients: splitList(values.excludeIngredients),
+    diet_type: parsedValues.dietType,
+    allergies: splitList(parsedValues.allergies),
+    cooking_skill: parsedValues.cookingSkill,
+    household_size: parsedValues.householdSize,
+    time_preference: parsedValues.timePreference,
+    cuisine_preferences: parsedValues.cuisinePreferences,
   };
 }
 
 export function fromApiPayload(payload: PreferencesApiPayload): PreferencesFormValues {
   return {
-    dietaryRestrictions: payload.dietary_restrictions,
+    dietType: payload.diet_type,
     allergies: joinList(payload.allergies),
-    cuisines: payload.cuisines,
-    prepTimeMax: payload.prep_time_max,
-    difficultyMax: payload.difficulty_max,
-    excludeIngredients: joinList(payload.exclude_ingredients),
+    cookingSkill: payload.cooking_skill,
+    householdSize: payload.household_size,
+    timePreference: payload.time_preference,
+    cuisinePreferences: payload.cuisine_preferences,
   };
 }
 
 export function emptyApiPayload(): PreferencesApiPayload {
   return {
-    dietary_restrictions: [],
+    diet_type: [],
     allergies: [],
-    cuisines: [],
-    prep_time_max: defaultPreferences.prepTimeMax,
-    difficulty_max: defaultPreferences.difficultyMax,
-    exclude_ingredients: [],
+    cooking_skill: defaultPreferences.cookingSkill,
+    household_size: defaultPreferences.householdSize,
+    time_preference: defaultPreferences.timePreference,
+    cuisine_preferences: [],
   };
 }
