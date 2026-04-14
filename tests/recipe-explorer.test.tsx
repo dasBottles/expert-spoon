@@ -72,10 +72,10 @@ describe("RecipeExplorer", () => {
     expect(screen.getByText("2 servings")).toBeInTheDocument();
   });
 
-  it("shows loading state initially", () => {
+  it("shows refreshing state initially", () => {
     render(<RecipeExplorer />);
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("Refreshing...")).toBeInTheDocument();
   });
 
   it("shows error state when fetch fails", async () => {
@@ -92,7 +92,7 @@ describe("RecipeExplorer", () => {
 
     render(<RecipeExplorer />);
 
-    expect(await screen.findByText("Could not load recipes. Please try again.")).toBeInTheDocument();
+    expect(await screen.findByText("Could not load recipes. Add the Spoonacular key or try again.")).toBeInTheDocument();
   });
 
   it("re-fetches when shuffle button is clicked", async () => {
@@ -127,14 +127,14 @@ describe("RecipeExplorer", () => {
     });
   });
 
-  it("renders diet filter pills", async () => {
+  it("renders diet filter controls", async () => {
     render(<RecipeExplorer />);
 
     await screen.findByText("Spaghetti Bolognese");
 
-    expect(screen.getByRole("button", { name: "vegetarian" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "vegan" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "keto" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /vegetarian/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /vegan/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /keto/i })).toBeInTheDocument();
   });
 
   it("renders view recipe links", async () => {

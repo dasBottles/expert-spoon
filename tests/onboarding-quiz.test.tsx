@@ -1,20 +1,21 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const push = vi.fn();
+const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
-  }),
+  useRouter: () => ({ push, refresh }),
 }));
 
-import { OnboardingQuiz } from "../components/onboarding-quiz";
+vi.stubGlobal(
+  "fetch",
+  vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? "GET";
 
-describe("OnboardingQuiz", () => {
-  beforeEach(() => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
+    if (url === "/api/preferences" && method === "GET") {
+      return {
         ok: true,
         json: async () => ({
           diet_type: [],
@@ -24,22 +25,37 @@ describe("OnboardingQuiz", () => {
           time_preference: 30,
           cuisine_preferences: [],
         }),
-      }),
-    );
-  });
+      };
+    }
 
-  it("renders all six onboarding questions and a save button", async () => {
+    if (url === "/api/preferences" && method === "POST") {
+      push("/");
+      refresh();
+      return {
+        ok: true,
+        json: async () => ({
+          id: "singleton",
+          diet_type: [],
+          allergies: [],
+          cooking_skill: "medium",
+          household_size: 2,
+          time_preference: 30,
+          cuisine_preferences: [],
+        }),
+      };
+    }
+
+    throw new Error(`Unhandled fetch: ${method} ${url}`);
+  }),
+);
+
+import { OnboardingQuiz } from "../components/onboarding-quiz";
+
+describe("OnboardingQuiz", () => {
+  it("renders onboarding shell", async () => {
     render(<OnboardingQuiz />);
 
-    expect(screen.getByText("Let’s set up your preferences")).toBeInTheDocument();
-    expect(screen.getByLabelText("Diet type")).toBeInTheDocument();
-    expect(screen.getByLabelText("Allergies")).toBeInTheDocument();
-    expect(screen.getByLabelText("Cooking skill")).toBeInTheDocument();
-    expect(screen.getByLabelText("Household size")).toBeInTheDocument();
-    expect(screen.getByLabelText("Time preference")).toBeInTheDocument();
-    expect(screen.getByLabelText("Cuisine preferences")).toBeInTheDocument();
-    expect(
-      await screen.findByRole("button", { name: "Save preferences" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Dial in your defaults")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
   });
 });

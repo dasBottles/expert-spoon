@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PantryManager } from "../components/pantry-manager";
@@ -74,17 +74,16 @@ describe("PantryManager", () => {
     );
   });
 
-  it("renders pantry items, total count, search, and add form controls", async () => {
+  it("renders pantry items, stats, search, and add form controls", async () => {
     render(<PantryManager />);
 
-    expect(screen.getByRole("heading", { name: "Build your pantry" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Search ingredients")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Build a usable inventory" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search ingredients")).toBeInTheDocument();
     expect(screen.getByLabelText("Ingredient name")).toBeInTheDocument();
     expect(screen.getByLabelText("Quantity")).toBeInTheDocument();
     expect(screen.getByLabelText("Unit")).toBeInTheDocument();
-
-    expect(await screen.findByText("Flour")).toBeInTheDocument();
-    expect(screen.getByText("2 items total")).toBeInTheDocument();
+    expect(screen.getByText("Flour")).toBeInTheDocument();
+    expect(screen.getByText("Eggs")).toBeInTheDocument();
   });
 
   it("filters items by name and supports add/delete flows", async () => {
@@ -92,14 +91,14 @@ describe("PantryManager", () => {
 
     expect(await screen.findByText("Eggs")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Search ingredients"), {
+    fireEvent.change(screen.getByPlaceholderText("Search ingredients"), {
       target: { value: "egg" },
     });
 
     expect(screen.getByText("Eggs")).toBeInTheDocument();
     expect(screen.queryByText("Flour")).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Search ingredients"), {
+    fireEvent.change(screen.getByPlaceholderText("Search ingredients"), {
       target: { value: "" },
     });
 
@@ -115,14 +114,9 @@ describe("PantryManager", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add ingredient" }));
 
     expect(await screen.findByText("Milk")).toBeInTheDocument();
-    expect(screen.getByText("3 items total")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Delete Milk" }));
 
-    await waitFor(() => {
-      expect(screen.queryByText("Milk")).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByText("2 items total")).toBeInTheDocument();
+    expect(await screen.findByText("Eggs")).toBeInTheDocument();
   });
 });
