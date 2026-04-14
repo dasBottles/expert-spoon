@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model UserPreferences {
+  id                   String   @id @default("singleton")
+  dietaryRestrictions  Json
+  allergies            Json
+  cuisines             Json
+  prepTimeMax          Int
+  difficultyMax        String
+  excludeIngredients   Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
