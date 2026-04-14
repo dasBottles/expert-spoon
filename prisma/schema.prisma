@@ -18,3 +18,13 @@ model UserPreferences {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
+
+model PantryItem {
+  id        String   @id @default(cuid())
+  name      String
+  quantity  Float
+  unit      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
