@@ -1,7 +1,32 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { preferencesApiSchema, emptyApiPayload } from "../../../lib/preferences";
 import { prisma } from "../../../lib/prisma";
+
+function serializeRecord(record: {
+  id: string;
+  dietType: unknown;
+  allergies: unknown;
+  cookingSkill: string;
+  householdSize: number;
+  timePreference: number;
+  cuisinePreferences: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: record.id,
+    diet_type: record.dietType,
+    allergies: record.allergies,
+    cooking_skill: record.cookingSkill,
+    household_size: record.householdSize,
+    time_preference: record.timePreference,
+    cuisine_preferences: record.cuisinePreferences,
+    created_at: record.createdAt.toISOString(),
+    updated_at: record.updatedAt.toISOString(),
+  };
+}
 
 export async function GET() {
   const record = await prisma.userPreferences.findUnique({
@@ -13,12 +38,12 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    dietary_restrictions: record.dietaryRestrictions,
+    diet_type: record.dietType,
     allergies: record.allergies,
-    cuisines: record.cuisines,
-    prep_time_max: record.prepTimeMax,
-    difficulty_max: record.difficultyMax,
-    exclude_ingredients: record.excludeIngredients,
+    cooking_skill: record.cookingSkill,
+    household_size: record.householdSize,
+    time_preference: record.timePreference,
+    cuisine_preferences: record.cuisinePreferences,
   });
 }
 
@@ -29,36 +54,39 @@ export async function POST(request: Request) {
     const record = await prisma.userPreferences.upsert({
       where: { id: "singleton" },
       update: {
-        dietaryRestrictions: payload.dietary_restrictions,
+        dietType: payload.diet_type,
         allergies: payload.allergies,
-        cuisines: payload.cuisines,
-        prepTimeMax: payload.prep_time_max,
-        difficultyMax: payload.difficulty_max,
-        excludeIngredients: payload.exclude_ingredients,
+        cookingSkill: payload.cooking_skill,
+        householdSize: payload.household_size,
+        timePreference: payload.time_preference,
+        cuisinePreferences: payload.cuisine_preferences,
       },
       create: {
         id: "singleton",
-        dietaryRestrictions: payload.dietary_restrictions,
+        dietType: payload.diet_type,
         allergies: payload.allergies,
-        cuisines: payload.cuisines,
-        prepTimeMax: payload.prep_time_max,
-        difficultyMax: payload.difficulty_max,
-        excludeIngredients: payload.exclude_ingredients,
+        cookingSkill: payload.cooking_skill,
+        householdSize: payload.household_size,
+        timePreference: payload.time_preference,
+        cuisinePreferences: payload.cuisine_preferences,
       },
     });
 
-    return NextResponse.json({
-      id: record.id,
-      dietary_restrictions: record.dietaryRestrictions,
-      allergies: record.allergies,
-      cuisines: record.cuisines,
-      prep_time_max: record.prepTimeMax,
-      difficulty_max: record.difficultyMax,
-      exclude_ingredients: record.excludeIngredients,
-      created_at: record.createdAt,
-      updated_at: record.updatedAt,
-    });
-  } catch {
+    return NextResponse.json(serializeRecord(record));
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid preferences payload.",
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Invalid preferences payload." },
       { status: 400 },

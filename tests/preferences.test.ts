@@ -1,53 +1,55 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  difficultyOptions,
-  dietaryRestrictionOptions,
+  cookingSkillOptions,
   cuisineOptions,
   defaultPreferences,
+  dietTypeOptions,
+  householdSizeOptions,
   preferencesFormSchema,
   toApiPayload,
 } from "../lib/preferences";
 
 describe("preferences helpers", () => {
   it("exposes the six onboarding question option groups and default values", () => {
-    expect(dietaryRestrictionOptions).toContain("vegetarian");
+    expect(dietTypeOptions).toContain("vegetarian");
     expect(cuisineOptions).toContain("Mediterranean");
-    expect(difficultyOptions).toEqual(["easy", "medium", "hard"]);
+    expect(cookingSkillOptions).toEqual(["easy", "medium", "hard"]);
+    expect(householdSizeOptions).toEqual([1, 2, 4, 6]);
     expect(defaultPreferences).toEqual({
-      dietaryRestrictions: [],
+      dietType: [],
       allergies: "",
-      cuisines: [],
-      prepTimeMax: 30,
-      difficultyMax: "medium",
-      excludeIngredients: "",
+      cookingSkill: "medium",
+      householdSize: 2,
+      timePreference: 30,
+      cuisinePreferences: [],
     });
   });
 
   it("normalizes free-text list fields and shapes the API payload", () => {
     const parsed = preferencesFormSchema.parse({
-      dietaryRestrictions: ["vegetarian", "gluten-free"],
+      dietType: ["vegetarian", "gluten-free"],
       allergies: "peanuts, shellfish\n tree nuts",
-      cuisines: ["Italian", "Asian"],
-      prepTimeMax: 45,
-      difficultyMax: "easy",
-      excludeIngredients: "mushrooms, olives",
+      cookingSkill: "easy",
+      householdSize: 4,
+      timePreference: 45,
+      cuisinePreferences: ["Italian", "Asian"],
     });
 
     expect(toApiPayload(parsed)).toEqual({
-      dietary_restrictions: ["vegetarian", "gluten-free"],
+      diet_type: ["vegetarian", "gluten-free"],
       allergies: ["peanuts", "shellfish", "tree nuts"],
-      cuisines: ["Italian", "Asian"],
-      prep_time_max: 45,
-      difficulty_max: "easy",
-      exclude_ingredients: ["mushrooms", "olives"],
+      cooking_skill: "easy",
+      household_size: 4,
+      time_preference: 45,
+      cuisine_preferences: ["Italian", "Asian"],
     });
   });
 
-  it("rejects invalid difficulty values", () => {
+  it("rejects invalid cooking skill values", () => {
     const result = preferencesFormSchema.safeParse({
       ...defaultPreferences,
-      difficultyMax: "expert",
+      cookingSkill: "expert",
     });
 
     expect(result.success).toBe(false);

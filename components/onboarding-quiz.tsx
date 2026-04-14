@@ -6,14 +6,15 @@ import { useForm } from "react-hook-form";
 
 import {
   cuisineOptions,
+  cookingSkillOptions,
   defaultPreferences,
-  dietaryRestrictionOptions,
-  difficultyOptions,
+  dietTypeOptions,
   emptyApiPayload,
   fromApiPayload,
-  prepTimeOptions,
+  householdSizeOptions,
   preferencesApiSchema,
   preferencesFormSchema,
+  timePreferenceOptions,
   toApiPayload,
   type PreferencesFormValues,
 } from "../lib/preferences";
@@ -54,10 +55,10 @@ export function OnboardingQuiz() {
     void loadPreferences();
   }, [reset]);
 
-  const prepTimeValue = watch("prepTimeMax");
-  const prepTimeLabel = useMemo(
-    () => (prepTimeValue >= 60 ? "60+ minutes" : `${prepTimeValue} minutes`),
-    [prepTimeValue],
+  const timePreferenceValue = watch("timePreference");
+  const timePreferenceLabel = useMemo(
+    () => (timePreferenceValue >= 60 ? "60+ minutes" : `${timePreferenceValue} minutes`),
+    [timePreferenceValue],
   );
 
   const onSubmit = handleSubmit(async (values) => {
@@ -98,15 +99,15 @@ export function OnboardingQuiz() {
             Let’s set up your preferences
           </h1>
           <p className="max-w-2xl text-base leading-7 text-zinc-600">
-            Answer six quick questions so recipe suggestions match how you actually eat.
+            Answer six quick questions so recipe suggestions match how your household actually eats.
           </p>
         </div>
 
         <form className="space-y-8" onSubmit={onSubmit}>
-          <fieldset aria-label="Dietary restrictions" className="space-y-3">
-            <legend className="text-lg font-medium text-zinc-950">1. Dietary restrictions</legend>
+          <fieldset aria-label="Diet type" className="space-y-3">
+            <legend className="text-lg font-medium text-zinc-950">1. Diet type</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              {dietaryRestrictionOptions.map((option) => (
+              {dietTypeOptions.map((option) => (
                 <label
                   key={option}
                   className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3 text-sm text-zinc-700"
@@ -115,7 +116,7 @@ export function OnboardingQuiz() {
                     type="checkbox"
                     value={option}
                     className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
-                    {...register("dietaryRestrictions")}
+                    {...register("dietType")}
                   />
                   <span className="capitalize">{option}</span>
                 </label>
@@ -134,57 +135,10 @@ export function OnboardingQuiz() {
             <span className="text-sm text-zinc-500">Separate multiple allergies with commas or new lines.</span>
           </label>
 
-          <label className="block space-y-2" aria-label="Preferred cuisines">
-            <span className="text-lg font-medium text-zinc-950">3. Preferred cuisines</span>
-            <select
-              multiple
-              className="min-h-40 w-full rounded-2xl border border-zinc-200 px-4 py-3 text-sm text-zinc-900 outline-none"
-              {...register("cuisines")}
-            >
-              {cuisineOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <span className="text-sm text-zinc-500">Hold Ctrl/Cmd to select more than one cuisine.</span>
-          </label>
-
-          <label className="block space-y-3" aria-label="Max prep time">
-            <span className="text-lg font-medium text-zinc-950">4. Max prep time</span>
-            <input
-              type="range"
-              min={0}
-              max={prepTimeOptions.length - 1}
-              step={1}
-              value={prepTimeOptions.indexOf(prepTimeValue as 15 | 30 | 45 | 60)}
-              className="w-full accent-emerald-600"
-              onChange={(event) => {
-                const nextValue = prepTimeOptions[Number(event.target.value)] ?? defaultPreferences.prepTimeMax;
-                reset(
-                  {
-                    ...watch(),
-                    prepTimeMax: nextValue,
-                  },
-                  { keepDirty: true, keepTouched: true },
-                );
-              }}
-            />
-            <input type="hidden" {...register("prepTimeMax", { valueAsNumber: true })} />
-            <div className="flex items-center justify-between text-sm text-zinc-500">
-              <span>15 min</span>
-              <span className="font-medium text-zinc-800">{prepTimeLabel}</span>
-              <span>60+ min</span>
-            </div>
-            {errors.prepTimeMax ? (
-              <p className="text-sm text-red-600">{errors.prepTimeMax.message}</p>
-            ) : null}
-          </label>
-
-          <fieldset aria-label="Cooking difficulty" className="space-y-3">
-            <legend className="text-lg font-medium text-zinc-950">5. Cooking difficulty</legend>
+          <fieldset aria-label="Cooking skill" className="space-y-3">
+            <legend className="text-lg font-medium text-zinc-950">3. Cooking skill</legend>
             <div className="grid gap-3 sm:grid-cols-3">
-              {difficultyOptions.map((option) => (
+              {cookingSkillOptions.map((option) => (
                 <label
                   key={option}
                   className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3 text-sm capitalize text-zinc-700"
@@ -193,7 +147,7 @@ export function OnboardingQuiz() {
                     type="radio"
                     value={option}
                     className="h-4 w-4 border-zinc-300 text-emerald-600"
-                    {...register("difficultyMax")}
+                    {...register("cookingSkill")}
                   />
                   {option}
                 </label>
@@ -201,15 +155,68 @@ export function OnboardingQuiz() {
             </div>
           </fieldset>
 
-          <label className="block space-y-2" aria-label="Ingredients to exclude">
-            <span className="text-lg font-medium text-zinc-950">6. Ingredients to exclude</span>
-            <textarea
-              rows={3}
-              placeholder="e.g. mushrooms, olives"
-              className="w-full rounded-2xl border border-zinc-200 px-4 py-3 text-sm text-zinc-900 outline-none ring-0 placeholder:text-zinc-400"
-              {...register("excludeIngredients")}
+          <label className="block space-y-2" aria-label="Household size">
+            <span className="text-lg font-medium text-zinc-950">4. Household size</span>
+            <select
+              className="w-full rounded-2xl border border-zinc-200 px-4 py-3 text-sm text-zinc-900 outline-none"
+              {...register("householdSize", { valueAsNumber: true })}
+            >
+              {householdSizeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option} {option === 1 ? "person" : "people"}
+                </option>
+              ))}
+            </select>
+            {errors.householdSize ? (
+              <p className="text-sm text-red-600">{errors.householdSize.message}</p>
+            ) : null}
+          </label>
+
+          <label className="block space-y-3" aria-label="Time preference">
+            <span className="text-lg font-medium text-zinc-950">5. Time preference</span>
+            <input
+              type="range"
+              min={0}
+              max={timePreferenceOptions.length - 1}
+              step={1}
+              value={timePreferenceOptions.indexOf(timePreferenceValue as 15 | 30 | 45 | 60)}
+              className="w-full accent-emerald-600"
+              onChange={(event) => {
+                const nextValue = timePreferenceOptions[Number(event.target.value)] ?? defaultPreferences.timePreference;
+                reset(
+                  {
+                    ...watch(),
+                    timePreference: nextValue,
+                  },
+                  { keepDirty: true, keepTouched: true },
+                );
+              }}
             />
-            <span className="text-sm text-zinc-500">We will filter these ingredients out of future searches.</span>
+            <input type="hidden" {...register("timePreference", { valueAsNumber: true })} />
+            <div className="flex items-center justify-between text-sm text-zinc-500">
+              <span>15 min</span>
+              <span className="font-medium text-zinc-800">{timePreferenceLabel}</span>
+              <span>60+ min</span>
+            </div>
+            {errors.timePreference ? (
+              <p className="text-sm text-red-600">{errors.timePreference.message}</p>
+            ) : null}
+          </label>
+
+          <label className="block space-y-2" aria-label="Cuisine preferences">
+            <span className="text-lg font-medium text-zinc-950">6. Cuisine preferences</span>
+            <select
+              multiple
+              className="min-h-40 w-full rounded-2xl border border-zinc-200 px-4 py-3 text-sm text-zinc-900 outline-none"
+              {...register("cuisinePreferences")}
+            >
+              {cuisineOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm text-zinc-500">Hold Ctrl/Cmd to select more than one cuisine.</span>
           </label>
 
           {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
